@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Trash2, BookOpen, Users, ClipboardList, Loader } from 'lucide-react';
-import { getCourses, createCourse, deleteCourse, getClasses, createClass, deleteClass, getPracticums, createPracticum, deletePracticum } from '../api/client';
+import { Plus, Trash2, BookOpen, Users, ClipboardList, Loader, Sparkles, CheckCircle } from 'lucide-react';
+import { getCourses, createCourse, deleteCourse, getClasses, createClass, deleteClass, getPracticums, createPracticum, deletePracticum, seedPracticums } from '../api/client';
 
 export default function SettingsPage() {
   const [courses, setCourses] = useState([]);
@@ -8,6 +8,7 @@ export default function SettingsPage() {
   const [practicums, setPracticums] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState('');
   const [loading, setLoading] = useState(false);
+  const [seeding, setSeeding] = useState(false);
 
   // Forms
   const [courseForm, setCourseForm] = useState({ name: '', code: '' });
@@ -66,6 +67,15 @@ export default function SettingsPage() {
     } catch { } finally { setLoading(false); }
   };
 
+  const handleSeedPracticums = async () => {
+    if (!selectedCourse) return;
+    setSeeding(true);
+    try {
+      const r = await seedPracticums(selectedCourse);
+      setPracticums(r.data);
+    } catch { } finally { setSeeding(false); }
+  };
+
   const handleDeletePracticum = async (id) => {
     await deletePracticum(id);
     const r = await getPracticums(selectedCourse); setPracticums(r.data);
@@ -121,20 +131,68 @@ export default function SettingsPage() {
 
           {/* Practicums */}
           <div className="glass-panel p-6">
-            <h2 className="text-lg font-semibold flex items-center gap-2 mb-4"><ClipboardList className="w-5 h-5 text-secondary" /> Practicums</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2"><ClipboardList className="w-5 h-5 text-secondary" /> Practicums</h2>
+              {practicums.length < 30 && (
+                <button
+                  onClick={handleSeedPracticums}
+                  disabled={seeding}
+                  className="btn btn-secondary btn-sm"
+                >
+                  {seeding ? (
+                    <><Loader className="w-4 h-4 animate-spin" /> Generating...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4" /> Generate All 30</>
+                  )}
+                </button>
+              )}
+              {practicums.length === 30 && (
+                <span className="flex items-center gap-1.5 text-xs text-success font-medium">
+                  <CheckCircle className="w-3.5 h-3.5" /> All 30 created
+                </span>
+              )}
+            </div>
+
+            {/* Manual add form */}
             <div className="flex gap-2 mb-4 flex-wrap">
               <input className="input w-16" type="number" placeholder="#" value={practicumForm.number} onChange={e => setPracticumForm({...practicumForm, number: +e.target.value})} />
               <input className="input flex-1 min-w-[120px]" placeholder="Practicum Title" value={practicumForm.title} onChange={e => setPracticumForm({...practicumForm, title: e.target.value})} />
               <button onClick={handleAddPracticum} disabled={loading} className="btn btn-primary btn-sm"><Plus className="w-4 h-4" /></button>
             </div>
-            <div className="space-y-2">
+
+            {/* Practicum list — scrollable */}
+            <div className="space-y-1.5 max-h-[480px] overflow-y-auto pr-1">
               {practicums.map(p => (
-                <div key={p.id} className="flex items-center justify-between p-3 rounded-lg border border-border-light hover:bg-white/[0.02]">
-                  <div><p className="font-medium text-sm">#{p.number} — {p.title}</p><p className="text-xs text-text-muted">Process: {p.max_process_marks} | Product: {p.max_product_marks}</p></div>
-                  <button onClick={() => handleDeletePracticum(p.id)} className="btn btn-ghost btn-sm p-1.5 text-danger hover:bg-danger/10"><Trash2 className="w-3.5 h-3.5" /></button>
+                <div key={p.id} className="flex items-center justify-between p-2.5 rounded-lg border border-border-light hover:bg-white/[0.02] group">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-secondary/10 flex items-center justify-center text-secondary font-bold text-xs">
+                      {p.number}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{p.title}</p>
+                      <p className="text-xs text-text-muted">Process: {p.max_process_marks} | Product: {p.max_product_marks} | Total: {p.max_process_marks + p.max_product_marks}</p>
+                    </div>
+                  </div>
+                  <button onClick={() => handleDeletePracticum(p.id)} className="btn btn-ghost btn-sm p-1.5 text-danger hover:bg-danger/10 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               ))}
-              {practicums.length === 0 && <p className="text-sm text-text-muted italic">No practicums.</p>}
+              {practicums.length === 0 && (
+                <div className="text-center py-8">
+                  <ClipboardList className="w-10 h-10 text-text-muted/30 mx-auto mb-3" />
+                  <p className="text-sm text-text-muted italic mb-3">No practicums yet.</p>
+                  <button
+                    onClick={handleSeedPracticums}
+                    disabled={seeding}
+                    className="btn btn-primary"
+                  >
+                    {seeding ? (
+                      <><Loader className="w-4 h-4 animate-spin" /> Generating...</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4" /> Generate All 30 Practicums</>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>

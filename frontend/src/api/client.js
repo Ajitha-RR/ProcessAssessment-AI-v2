@@ -21,6 +21,7 @@ export const deleteClass = (id) => api.delete(`/classes/${id}`);
 export const getPracticums = (courseId) => api.get('/practicums/', { params: { course_id: courseId } });
 export const createPracticum = (data) => api.post('/practicums/', null, { params: data });
 export const deletePracticum = (id) => api.delete(`/practicums/${id}`);
+export const seedPracticums = (courseId) => api.post('/practicums/seed', null, { params: { course_id: courseId } });
 
 // --- Uploads ---
 export const uploadFiles = (formData, onProgress) =>
