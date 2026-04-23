@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+
+# Build output (will be built on Render)
+frontend/dist/
+
+# Database files (using PostgreSQL in production)
+*.db
+
+# Temp files
+backend/temp_uploads/
+*.log
+
+# Environment
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug scripts
+backend/debug_*.py
+backend/test_*.py
+backend/extract_*.py
+backend/extracted_*.txt
